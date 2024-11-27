@@ -1,2 +1,3 @@
 mobile/client/node_modules
 mobile/server/.venv
+mobile/server/__pycache__
