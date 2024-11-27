@@ -29,8 +29,8 @@ const byte digitCodes[10] = {
 unsigned long previousMillis = 0; // Biến để lưu thời điểm trước đó
 const long interval = 1000;       // Khoảng thời gian giữa các lần cập nhật (300 ms)
 
-int counter = 0; // Biến đếm đèn 1
-int c2 = 0;      // Biến đếm đèn 2
+int counter1 = 0; // Biến đếm đèn 1
+int counter2 = 0;      // Biến đếm đèn 2
 
 int dx1 = 30;
 int dv1 = 3;
@@ -101,7 +101,7 @@ void sendCurrentState()
   {
     Serial.print("Red 1: ");
   }
-  Serial.println(counter);
+  Serial.println(counter1);
 
   if (k == 2)
   {
@@ -115,7 +115,7 @@ void sendCurrentState()
   {
     Serial.print("Yellow 2: ");
   }
-  Serial.println(c2);
+  Serial.println(counter2);
 }
 
 void handleCommand(int command)
@@ -145,8 +145,8 @@ void handleCommand(int command)
     trafficLight_2.normalInterval();
     trafficLight_1.greenPinActivate();
     trafficLight_2.redPinActivate();
-    counter = 0;
-    c2 = 0;
+    counter1 = 0;
+    counter2 = 0;
     Serial.println("Normal mode activated.");
     break;
   case 4: // Chế độ peak hour
@@ -154,8 +154,8 @@ void handleCommand(int command)
     trafficLight_2.peakHourMode();
     x = 1;
     k = 1;
-    counter = 0;
-    c2 = 0;
+    counter1 = 0;
+    counter2 = 0;
     counting = true;
     nightModeActive = false; // Tắt night mode
     Serial.println("Peak hour mode activated.");
@@ -192,8 +192,8 @@ void loop()
   {
     sendCurrentState();
     previousMillis = currentMillis;
-    counter--;
-    c2--;
+    counter1--;
+    counter2--;
   }
 
   // Kiểm tra xem có dữ liệu từ Serial Monitor không
@@ -216,10 +216,10 @@ void loop()
   }
 
   int digits[4];
-  digits[0] = counter / 10;
-  digits[1] = counter % 10;
-  digits[2] = c2 / 10;
-  digits[3] = c2 % 10;
+  digits[0] = counter1 / 10;
+  digits[1] = counter1 % 10;
+  digits[2] = counter2 / 10;
+  digits[3] = counter2 % 10;
 
   // Hiển thị từng digit
   if (displayEnabled)
@@ -251,46 +251,46 @@ void loop()
   }
 
   // Điều khiển đèn giao thông
-  if (counter < 0)
+  if (counter1 < 0)
   {
     if (x == 1)
     {
       trafficLight_1.greenPinActivate();
       x = 2;
-      counter = trafficLight_1.getGreenPinInterval();
+      counter1 = trafficLight_1.getGreenPinInterval();
     }
     else if (x == 2)
     {
       trafficLight_1.yellowPinActivate();
       x = 3;
-      counter = trafficLight_1.getYellowPinInterval();
+      counter1 = trafficLight_1.getYellowPinInterval();
     }
     else if (x == 3)
     {
       trafficLight_1.redPinActivate();
-      counter = trafficLight_1.getRedPinInterval();
+      counter1 = trafficLight_1.getRedPinInterval();
       x = 1;
     }
   }
 
-  if (c2 < 0)
+  if (counter2 < 0)
   {
     if (k == 1)
     {
       trafficLight_2.redPinActivate();
       k = 2;
-      c2 = trafficLight_2.getRedPinInterval();
+      counter2 = trafficLight_2.getRedPinInterval();
     }
     else if (k == 2)
     {
       trafficLight_2.greenPinActivate();
       k = 3;
-      c2 = trafficLight_2.getGreenPinInterval();
+      counter2 = trafficLight_2.getGreenPinInterval();
     }
     else if (k == 3)
     {
       trafficLight_2.yellowPinActivate();
-      c2 = trafficLight_2.getYellowPinInterval();
+      counter2 = trafficLight_2.getYellowPinInterval();
       k = 1;
     }
   }

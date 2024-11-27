@@ -1,19 +1,36 @@
-import { View, Text, Button, StyleSheet } from 'react-native'
-import React from 'react'
+import { View, Text, Button, StyleSheet } from 'react-native';
+import React from 'react';
+import TrafficLight from './TrafficLight';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    flexDirection: 'column',
+    marginVertical: 100,
+  },
+  trafficLightSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  buttonSection: {
   },
   buttonContainer: {
     marginBottom: 20,
-    paddingHorizontal: 20
+    width: '70%',
   },
 });
 
 const App = () => {
+  const featureList = [
+    { command: 1, name: 'Stop counting' },
+    { command: 2, name: 'Night' },
+    { command: 3, name: 'Normal' },
+    { command: 4, name: 'Peak hour' },
+    { command: 5, name: 'Manual' },
+  ];
 
   const sendCommand = async (command) => {
     try {
@@ -38,23 +55,22 @@ const App = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.buttonContainer}>
-        <Button onPress={() => sendCommand('1')} title='Feature 1' />
+      <View style={styles.trafficLightSection}>
+        <TrafficLight/>
+        <TrafficLight/>
       </View>
-      <View style={styles.buttonContainer}>
-        <Button onPress={() => sendCommand('2')} title='Feature 2' />
-      </View>
-      <View style={styles.buttonContainer}>
-        <Button onPress={() => sendCommand('3')} title='Feature 3' />
-      </View>
-      <View style={styles.buttonContainer}>
-        <Button onPress={() => sendCommand('4')} title='Feature 4' />
-      </View>
-      <View style={styles.buttonContainer}>
-        <Button onPress={() => sendCommand('5')} title='Feature 5' />
+      <View style={styles.buttonSection}>
+        {featureList.map((feature, index) => (
+          <View style={styles.buttonContainer} key={index}>
+            <Button
+              onPress={() => sendCommand(feature.command.toString())}
+              title={feature.name}
+            />
+          </View>
+        ))}
       </View>
     </View>
-  )
-}
+  );
+};
 
-export default App
+export default App;

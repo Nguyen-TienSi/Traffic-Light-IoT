@@ -20,14 +20,9 @@ public:
     void updateIntervals(int greenInterval, int yellowInterval, int redInterval);
 
 private:
-    int _greenPin;
-    int _yellowPin;
-    int _redPin;
-    int _greenPinInterval;
-    int _yellowPinInterval;
-    int _redPinInterval;
-
-    int _greenTmp, _redTmp;
+    int _greenPin, _yellowPin, _redPin;
+    int _greenPinInterval, _yellowPinInterval, _redPinInterval;
+    int _greenTmpInterval, _yellowTmpInterval, _redTmpInterval;
 };
 
 #endif

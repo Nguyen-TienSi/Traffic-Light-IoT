@@ -1,6 +1,7 @@
 import serial
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
+import socket
 
 app = Flask(__name__)
 CORS(app)
@@ -19,5 +20,15 @@ def control_arduino():
     except serial.SerialException as e:
         return jsonify({'error': f'Serial communication error: {e}'}), 500
 
+def get_ipv4():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))  # Kết nối đến một server DNS công cộng
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception as e:
+        return f"Error: {e}"
+
 if __name__ == '__main__':
-    app.run(debug=True, host='192.168.2.9', port=5000)
+    app.run(debug=True, host=get_ipv4(), port=5000)
