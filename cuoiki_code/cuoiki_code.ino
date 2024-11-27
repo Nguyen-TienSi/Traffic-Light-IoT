@@ -30,7 +30,7 @@ unsigned long previousMillis = 0; // Biến để lưu thời điểm trước �
 const long interval = 1000;       // Khoảng thời gian giữa các lần cập nhật (300 ms)
 
 int counter1 = 0; // Biến đếm đèn 1
-int counter2 = 0;      // Biến đếm đèn 2
+int counter2 = 0; // Biến đếm đèn 2
 
 int dx1 = 30;
 int dv1 = 3;
@@ -46,8 +46,6 @@ TrafficLight trafficLight_2(A3, A4, A5, dx2, dv2, dd2);
 void setup()
 {
   Serial.begin(9600); // Khởi tạo Serial
-  trafficLight_1.begin();
-  trafficLight_2.begin();
 
   // Thiết lập các chân segment là OUTPUT
   for (int i = 0; i < 7; i++)
@@ -89,33 +87,12 @@ void turnOnAllLEDs()
 
 void sendCurrentState()
 {
-  if (x == 2)
-  {
-    Serial.print("Green 1: ");
-  }
-  else if (x == 3)
-  {
-    Serial.print("Yellow 1: ");
-  }
-  else
-  {
-    Serial.print("Red 1: ");
-  }
-  Serial.println(counter1);
-
-  if (k == 2)
-  {
-    Serial.print("Red 2: ");
-  }
-  else if (k == 3)
-  {
-    Serial.print("Green 2: ");
-  }
-  else
-  {
-    Serial.print("Yellow 2: ");
-  }
-  Serial.println(counter2);
+  char jsonData[256];
+  int len = sprintf(jsonData, "{\"counter1\":%d,\"counter2\":%d,\"light1\":\"%s\",\"light2\":\"%s\"}",
+                    counter1, counter2,
+                    (x == 1 ? "red" : (x == 2 ? "green" : "yellow")),
+                    (k == 1 ? "yellow" : (k == 2 ? "red" : "green")));
+  Serial.println(jsonData);
 }
 
 void handleCommand(int command)
@@ -127,9 +104,7 @@ void handleCommand(int command)
     nightModeActive = false; // Tắt night mode
     Serial.println("Counting stopped.");
     break;
-  case 2: // Chế độ night
-    // trafficLight_1.yellowPinActivate();
-    // trafficLight_2.yellowPinActivate();
+  case 2:                   // Chế độ night
     turnOffAllLEDs();       // Tắt tất cả LED
     counting = false;       // Dừng đếm
     nightModeActive = true; // Kích hoạt chế độ night
@@ -139,12 +114,10 @@ void handleCommand(int command)
     counting = true;         // Quay lại chế độ đếm
     turnOnAllLEDs();         // Bật lại tất cả LED
     nightModeActive = false; // Tắt night mode
-    x = 1;
-    k = 1;
     trafficLight_1.normalInterval();
     trafficLight_2.normalInterval();
-    trafficLight_1.greenPinActivate();
-    trafficLight_2.redPinActivate();
+    x = 1;
+    k = 1;
     counter1 = 0;
     counter2 = 0;
     Serial.println("Normal mode activated.");
@@ -152,11 +125,7 @@ void handleCommand(int command)
   case 4: // Chế độ peak hour
     trafficLight_1.peakHourMode();
     trafficLight_2.peakHourMode();
-    x = 1;
-    k = 1;
-    counter1 = 0;
-    counter2 = 0;
-    counting = true;
+    counting = true;         // Quay lại chế độ đếm
     nightModeActive = false; // Tắt night mode
     Serial.println("Peak hour mode activated.");
     break;
@@ -164,17 +133,17 @@ void handleCommand(int command)
     counting = false; // Dừng đếm
     turnOffAllLEDs(); // Tắt tất cả LED
     // Chuyển đổi giữa các chế độ đèn
-    if (currentLight == 1)
+    if (currentLight == 1) // Đèn 1 đang sáng
     {
       trafficLight_1.redPinActivate();
       trafficLight_2.greenPinActivate();
-      currentLight = 2; // Đèn 2 đang sáng
+      currentLight = 2;
     }
-    else
+    else // Đèn 2 đang sáng
     {
       trafficLight_1.greenPinActivate();
       trafficLight_2.redPinActivate();
-      currentLight = 1; // Đèn 1 đang sáng
+      currentLight = 1;
     }
     Serial.println("Light switched to manual mode.");
     break;

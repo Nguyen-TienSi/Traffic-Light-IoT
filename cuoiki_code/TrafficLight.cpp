@@ -3,7 +3,10 @@
 TrafficLight::TrafficLight(int greenPin, int yellowPin, int redPin, int greenPinInterval, int yellowPinInterval, int redPinInterval)
     : _greenPin(greenPin), _yellowPin(yellowPin), _redPin(redPin),
       _greenPinInterval(greenPinInterval), _yellowPinInterval(yellowPinInterval), _redPinInterval(redPinInterval),
-      _greenTmpInterval(greenPinInterval), _yellowTmpInterval(yellowPinInterval), _redTmpInterval(redPinInterval) {}
+      _greenTmpInterval(greenPinInterval), _yellowTmpInterval(yellowPinInterval), _redTmpInterval(redPinInterval)
+{
+    begin();
+}
 
 void TrafficLight::begin()
 {
@@ -58,6 +61,7 @@ int TrafficLight::getRedPinInterval()
 void TrafficLight::peakHourMode()
 {
     _greenPinInterval += 30;
+    _yellowPinInterval = _yellowTmpInterval;
     _redPinInterval += 30;
 }
 

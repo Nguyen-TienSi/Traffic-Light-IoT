@@ -17,6 +17,7 @@ const styles = StyleSheet.create({
         height: 50,
         borderRadius: 25,
         margin: 5,
+        backgroundColor: 'black',
     },
     red: { backgroundColor: 'red' },
     yellow: { backgroundColor: 'yellow' },
@@ -24,15 +25,15 @@ const styles = StyleSheet.create({
     counter: { fontSize: 50, marginTop: 10 },
 })
 
-const TrafficLight = () => {
+const TrafficLight = ({light, counter}) => {
     return (
         <View style={styles.container}>
             <View style={styles.trafficLight}>
-                <View style={[styles.light, styles.red]} />
-                <View style={[styles.light, styles.yellow]} />
-                <View style={[styles.light, styles.green]} />
+                <View style={[styles.light, light === 'red' ? styles.red : {}]} />
+                <View style={[styles.light, light === 'yellow' ? styles.yellow : {}]} />
+                <View style={[styles.light, light === 'green' ? styles.green : {}]} />
             </View>
-            <Text style={styles.counter}>30</Text>
+            <Text style={styles.counter}>{counter}</Text>
         </View>
     );
 }

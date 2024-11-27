@@ -2,6 +2,7 @@ import serial
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 import socket
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -19,6 +20,24 @@ def control_arduino():
                 return jsonify({'error': 'No command provided'}), 400
     except serial.SerialException as e:
         return jsonify({'error': f'Serial communication error: {e}'}), 500
+
+@app.route('/data', methods=['GET'])
+def get_data():
+    try:
+        with serial.Serial(port='COM2', baudrate=9600, timeout=1) as ser:
+            line = ser.readline().decode('utf-8').strip()
+            if line:
+                try:
+                    data = json.loads(line)
+                    return jsonify({'data': data}), 200
+                except json.JSONDecodeError as e:
+                    return jsonify({'error': f'Invalid JSON from Arduino: {e}'}), 500
+            else:
+                return jsonify({'error': 'No data received from Arduino'}), 404
+    except serial.SerialException as e:
+        return jsonify({'error': f'Serial communication error: {e}'}), 500
+    except Exception as e:
+        return jsonify({'error': f'An unexpected error occurred: {e}'}), 500
 
 def get_ipv4():
     try:
