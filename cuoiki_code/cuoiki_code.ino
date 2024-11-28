@@ -1,3 +1,4 @@
+#include <ArduinoJson.h>
 #include "TrafficLight.h"
 
 // Chân kết nối các segment của LED 7 đoạn
@@ -43,6 +44,8 @@ int dd2 = 34;
 TrafficLight trafficLight_1(A0, A1, A2, dx1, dv1, dd1);
 TrafficLight trafficLight_2(A3, A4, A5, dx2, dv2, dd2);
 
+StaticJsonDocument<500> doc;
+
 void setup()
 {
   Serial.begin(9600); // Khởi tạo Serial
@@ -85,14 +88,24 @@ void turnOnAllLEDs()
   displayEnabled = true;
 }
 
-void sendCurrentState()
-{
-  char jsonData[256];
-  int len = sprintf(jsonData, "{\"counter1\":%d,\"counter2\":%d,\"light1\":\"%s\",\"light2\":\"%s\"}",
-                    counter1, counter2,
-                    (x == 1 ? "red" : (x == 2 ? "green" : "yellow")),
-                    (k == 1 ? "yellow" : (k == 2 ? "red" : "green")));
-  Serial.println(jsonData);
+void sendCurrentState() {
+  doc.clear(); // Xóa dữ liệu document trước khi thêm
+
+  doc["counter1"] = counter1;
+  doc["counter2"] = counter2;
+  doc["light1"] = (x == 1 ? "red" : (x == 2 ? "green" : "yellow"));
+  doc["light2"] = (k == 1 ? "yellow" : (k == 2 ? "red" : "green"));
+
+  String jsonString;
+  serializeJson(doc, jsonString);
+
+  // Gửi dữ liệu theo phần để bảo đảm thành công
+  for (int i = 0; i < jsonString.length(); i += 32) { // Gửi 32-byte 
+    Serial.print(jsonString.substring(i, min((int)jsonString.length(), i + 32)));
+    Serial.print('\n'); // Thêm kí tự newline để kết thúc mỗi phần
+    delay(10); // Delay một khoảng thời gian để dọn dẹp bộ đệm serial
+  }
+  Serial.print("END\n"); // Đánh dấu kết thúc chuỗi JSON
 }
 
 void handleCommand(int command)

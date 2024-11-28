@@ -38,10 +38,17 @@ const App = () => {
     const fetchData = async () => {
       try {
         const response = await fetch(`http://${BASE_URL}/data`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+
+        if (response.status === 204) {
+          return;
         }
-        const json = await response.json();
+
+        if (!response.ok) {
+          const errorBody = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
+        }
+
+        const json = await response.json(); console.log(json.data)
         setData(json.data);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -50,10 +57,6 @@ const App = () => {
     const intervalId = setInterval(fetchData, 1000);
     return () => clearInterval(intervalId);
   }, [])
-
-  useEffect(() => {
-    console.log(data)
-  }, [data])
 
   const sendCommand = async (command) => {
     try {
@@ -79,8 +82,8 @@ const App = () => {
   return (
     <View style={styles.container}>
       <View style={styles.trafficLightSection}>
-        <TrafficLight light={data?.light1} counter={data?.counter1}/>
-        <TrafficLight light={data?.light2} counter={data?.counter2}/>
+        <TrafficLight light={data?.light1} counter={data?.counter1} />
+        <TrafficLight light={data?.light2} counter={data?.counter2} />
       </View>
       <View style={styles.buttonSection}>
         {featureList.map((feature, index) => (
