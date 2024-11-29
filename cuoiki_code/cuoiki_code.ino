@@ -125,8 +125,9 @@ void handleCommand(int command)
     break;
   case 3:                    // Chế độ normal
     counting = true;         // Quay lại chế độ đếm
-    turnOnAllLEDs();         // Bật lại tất cả LED
     nightModeActive = false; // Tắt night mode
+    currentLight = 1;
+    turnOnAllLEDs();         // Bật lại tất cả LED
     trafficLight_1.normalInterval();
     trafficLight_2.normalInterval();
     x = 1;

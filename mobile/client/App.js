@@ -24,7 +24,12 @@ const styles = StyleSheet.create({
 });
 
 const App = () => {
-  const [data, setData] = useState({});
+  const [data, setData] = useState({
+    light1: '',
+    light2: '',
+    counter1: 0,
+    counter2: 0,
+  });
   const featureList = [
     { command: 1, name: 'Stop counting' },
     { command: 2, name: 'Night' },
@@ -32,6 +37,9 @@ const App = () => {
     { command: 4, name: 'Peak hour' },
     { command: 5, name: 'Manual' },
   ];
+  const [blinking, setBlinking] = useState(false);
+  const [yellowState, setYellowState] = useState(false);
+  const [isManualFirstTime, setIsManualFirstTime] = useState(true);
   const BASE_URL = '192.168.2.9:5000'
 
   useEffect(() => {
@@ -58,6 +66,28 @@ const App = () => {
     return () => clearInterval(intervalId);
   }, [])
 
+  useEffect(() => {
+    let intervalId;
+    if (blinking) {
+      intervalId = setInterval(() => {
+        setYellowState(prev => !prev);
+      }, 500);
+    } else {
+      setYellowState(false);
+    }
+
+    return () => clearInterval(intervalId);
+  }, [blinking]);
+
+  const handleManualMode = () => {
+    if (isManualFirstTime) {
+      setData({ light1: 'red', light2: 'green' });
+      setIsManualFirstTime(false);
+    } else {
+      setData(prev => ({ light1: prev.light2, light2: prev.light1, }));
+    }
+  };
+
   const sendCommand = async (command) => {
     try {
       const response = await fetch(`http://${BASE_URL}/control`, {
@@ -73,7 +103,16 @@ const App = () => {
       }
 
       const data = await response.json();
-      console.log('Success:', data);
+      console.log('Success:', data.message);
+
+      if (command === '2' && typeof data === 'object') {
+        setData({ light1: '', light2: '' });
+        setBlinking(true);
+      } else if (command === '3' && typeof data === 'object') {
+        setBlinking(false)
+      } else if (command === '5' && typeof data === 'object') {
+        handleManualMode()
+      }
     } catch (error) {
       console.error('Error:', error);
     }
@@ -82,8 +121,8 @@ const App = () => {
   return (
     <View style={styles.container}>
       <View style={styles.trafficLightSection}>
-        <TrafficLight light={data?.light1} counter={data?.counter1} />
-        <TrafficLight light={data?.light2} counter={data?.counter2} />
+        <TrafficLight light={blinking && yellowState ? 'yellow' : data.light1} counter={data.counter1} />
+        <TrafficLight light={blinking && !yellowState ? 'yellow' : data.light2} counter={data.counter2} />
       </View>
       <View style={styles.buttonSection}>
         {featureList.map((feature, index) => (

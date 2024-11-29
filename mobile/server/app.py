@@ -78,7 +78,7 @@ def control_arduino():
     command = data.get('command')
     if command:
         command_queue.put(command)
-        return jsonify({'message': 'Command sent successfully'}), 200
+        return jsonify({'message': f'Command {command} sent successfully'}), 200
 
 @app.route('/data', methods=['GET'])
 def get_data():
