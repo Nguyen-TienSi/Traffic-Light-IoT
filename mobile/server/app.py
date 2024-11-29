@@ -6,6 +6,7 @@ import json
 import time
 import threading
 import queue
+import sqlite3
 
 app = Flask(__name__)
 CORS(app)
@@ -13,6 +14,7 @@ CORS(app)
 ser = None
 command_queue = queue.Queue()
 data_queue = queue.Queue()
+db_queue = queue.Queue()
 buffer = ""  # Bộ đệm lưu trữ dữ liệu tạm thời
 receiving_data = False # Biến cờ
 
@@ -71,14 +73,67 @@ def send_commands():
                 break
         time.sleep(0.1)
 
+def db_worker():
+    conn_obj = None
+    try:
+        conn_obj = sqlite3.connect('traffic_light.db')
+        cursor_obj = conn_obj.cursor()
+        cursor_obj.execute("DROP TABLE IF EXISTS traffic_commands")
+        cursor_obj.execute("""
+            CREATE TABLE IF NOT EXISTS traffic_commands (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                command TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn_obj.commit()
+        while True:
+            try:
+                opt, args = db_queue.get()
+                if opt == "insert":
+                    cursor_obj.execute("INSERT INTO traffic_commands (command) VALUES (?)", args)
+                    conn_obj.commit()
+                # elif opt == "select":
+                #     cursor_obj.execute("SELECT command FROM traffic_commands ORDER BY id DESC LIMIT 1")
+                #     result = cursor_obj.fetchone()
+                #     db_queue.task_done()
+                #     if result:
+                #         yield result[0]
+                #     else:
+                #         yield None
+                else:
+                    raise ValueError(f"Unknown database operation: {opt}")
+                db_queue.task_done()
+                
+                cursor_obj.execute("SELECT command FROM traffic_commands ORDER BY id DESC LIMIT 1")
+                result = cursor_obj.fetchone()
+                print(result[0])
+            except sqlite3.Error as e:
+                app.logger.error(f"Database error: {e}")
+            except Exception as e:
+                app.logger.exception(f"Error in database worker: {e}")
+    except Exception as e:
+        app.logger.exception(f"Error connecting to the database: {e}")
+    finally:
+        if conn_obj:
+            conn_obj.close()
+
 @app.route('/control', methods=['POST'])
 def control_arduino():
     global command_queue
-    data = request.get_json()
-    command = data.get('command')
-    if command:
-        command_queue.put(command)
-        return jsonify({'message': f'Command {command} sent successfully'}), 200
+    try:
+        data = request.get_json()
+        command = data.get('command')
+        if command:
+            command_queue.put(command)
+            db_queue.put(("insert", (command,)))
+            return jsonify({'message': f'Command {command} sent successfully'}), 200
+        else:
+            return jsonify({'error': 'No command provided'}), 400
+
+    except Exception as e:
+        app.logger.exception(f"Error processing control command: {e}")
+        return jsonify({'error': 'Failed to send command'}), 500
 
 @app.route('/data', methods=['GET'])
 def get_data():
@@ -113,6 +168,9 @@ if __name__ == '__main__':
         
         command_thread = threading.Thread(target=send_commands, daemon=True)
         command_thread.start()
+        
+        db_thread = threading.Thread(target=db_worker, daemon=True)
+        db_thread.start()
         
         ip_address = get_ipv4()
         app.run(debug=True, host=ip_address, port=5000, use_reloader=False, threaded=True)
