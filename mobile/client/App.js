@@ -1,4 +1,4 @@
-import { View, Button, StyleSheet } from 'react-native';
+import { View, Button, StyleSheet, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import TrafficLight from './TrafficLight';
 
@@ -102,18 +102,26 @@ const App = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      console.log('Success:', data.message);
+      const commandResponse = await response.json();
+      Alert.alert('Success', commandResponse.message);
 
-      if (command === '2' && typeof data === 'object') {
-        setData({ light1: '', light2: '' });
-        setBlinking(true);
-      } else if (command === '3' && typeof data === 'object') {
-        setBlinking(false)
-      } else if (command === '5' && typeof data === 'object') {
-        handleManualMode()
+      switch (command) {
+        case '2': // Night
+          setData({ light1: '', light2: '' });
+          setBlinking(true);
+          break;
+        case '3': // Normal
+          setBlinking(false);
+          setIsManualFirstTime(true);
+          break;
+        case '5': // Manual
+          handleManualMode();
+          break;
+        default:
+          break;
       }
     } catch (error) {
+      Alert.alert('Error', error.message);
       console.error('Error:', error);
     }
   };
